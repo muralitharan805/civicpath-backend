@@ -1,0 +1,46 @@
+# ==============================================================================
+# CivicPath Backend - Docker Ignore List
+# ==============================================================================
+
+# Dependency directories (must be built inside container to avoid OS architecture mismatch)
+node_modules/
+.pnpm-store/
+
+# Compiled outputs
+dist/
+coverage/
+.build/
+
+# Local configuration files and secrets
+.env
+.env.*
+!.env.example
+
+# Version control and system/IDE files
+.git/
+.gitignore
+.gitattributes
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Documentation and operational files
+docker-compose*.yml
+Dockerfile
+.dockerignore
+docker_guide.md
+docker_guide.html
+
+# Log directories and debug archives
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

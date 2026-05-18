@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner # Uses the lightweight, dependency-pruned production stage
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=db # Connects directly to the 'db' container via Docker DNS
+      - DB_PORT=5432
+      - DB_USERNAME=vector_admin
+      - DB_PASSWORD=pgV3ct0r_prod_secure_password_change_me! # Production credentials (customize in .env)
+      - DB_DATABASE=vectordb
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  db:
+    image: pgvector/pgvector:16-pgvector
+    environment:
+      - POSTGRES_USER=vector_admin
+      - POSTGRES_PASSWORD=pgV3ct0r_prod_secure_password_change_me!
+      - POSTGRES_DB=vectordb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vector_admin -d vectordb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+volumes:
+  pgdata:
+    name: civicpath_pgdata

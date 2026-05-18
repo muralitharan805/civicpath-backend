@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dependencies # Has all devDependencies installed to enable ts compilation and watch mode
+    volumes:
+      - .:/app
+      - /app/node_modules # Avoid overwriting the container's built node_modules with the host's
+    command: pnpm run start:dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Resolves the host IP on Linux so app can connect to local pgvector-db
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=host.docker.internal # Connects to the host's localhost database
+      - DB_PORT=5432
+      - DB_USERNAME=vector_admin
+      - DB_PASSWORD=pgV3ct0r_53cur3_Pa55w0rd!
+      - DB_DATABASE=vectordb
+    ports:
+      - "3000:3000"
+      - "9229:9229" # Node.js debugging port
+    restart: "no"
