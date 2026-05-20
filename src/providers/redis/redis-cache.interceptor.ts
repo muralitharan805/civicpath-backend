@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { latLngToCell } from 'h3-js';
 import { RedisService } from './redis.service';
 
 @Injectable()
@@ -24,9 +25,22 @@ export class RedisCacheInterceptor implements NestInterceptor {
     let cacheKey = `civicpath:cache:${request.method}:${request.url}`;
 
     // If it's a POST request (like the /inside boundary query), we MUST include the body in the cache key
-    // Otherwise, different coordinates will return the same cached result!
     if (request.method === 'POST' && request.body && Object.keys(request.body).length > 0) {
-      cacheKey += `:${JSON.stringify(request.body)}`;
+      // If the body contains latitude and longitude, convert them to an H3 Hexagon ID!
+      if (request.body.latitude && request.body.longitude) {
+        const lat = parseFloat(request.body.latitude);
+        const lon = parseFloat(request.body.longitude);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          // Resolution 10 creates a hexagon of roughly 15,000 square meters
+          const h3Index = latLngToCell(lat, lon, 10);
+          cacheKey += `:h3:${h3Index}`;
+        } else {
+          cacheKey += `:${JSON.stringify(request.body)}`;
+        }
+      } else {
+        // Fallback for non-spatial POST requests
+        cacheKey += `:${JSON.stringify(request.body)}`;
+      }
     }
 
     // Check if we have a cached response
