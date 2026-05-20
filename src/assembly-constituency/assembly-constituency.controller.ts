@@ -8,12 +8,15 @@ import {
   DefaultValuePipe,
   BadRequestException,
   NotFoundException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AssemblyConstituencyService } from './assembly-constituency.service';
 import { FindByCoordinatesDto } from './dto/find-by-coordinates.dto';
+import { RedisCacheInterceptor } from '../providers/redis/redis-cache.interceptor';
 
 @ApiTags('assembly-constituencies')
+@UseInterceptors(RedisCacheInterceptor)
 @Controller('assembly-constituencies')
 export class AssemblyConstituencyController {
   constructor(
