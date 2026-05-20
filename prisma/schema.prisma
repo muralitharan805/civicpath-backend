@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model assembly_constituencies {
+  ogc_fid    Int                      @id @default(autoincrement())
+  objectid   Decimal?                 @db.Decimal(9, 0)
+  st_code    Decimal?                 @db.Decimal(10, 0)
+  st_name    String?                  @db.VarChar(254)
+  dt_code    Decimal?                 @db.Decimal(10, 0)
+  dist_name  String?                  @db.VarChar(254)
+  ac_no      Decimal?                 @db.Decimal(10, 0)
+  ac_name    String?                  @db.VarChar(254)
+  pc_no      Decimal?                 @db.Decimal(10, 0)
+  pc_name    String?                  @db.VarChar(254)
+  pc_id      Decimal?                 @db.Decimal(10, 0)
+  status     String?                  @db.VarChar(254)
+  shape_leng Decimal?                 @db.Decimal(18, 11)
+  shape_area Decimal?                 @db.Decimal(18, 11)
+  geom       Unsupported("geometry")?
+
+  @@index([geom], map: "assembly_constituencies_geom_geom_idx", type: Gist)
+}
+
+
