@@ -53,4 +53,31 @@ export class AssemblyConstituencyService {
       LIMIT ${limit};
     `;
   }
+
+  /**
+   * Finds the single assembly constituency that contains the given coordinate.
+   * Returns null if no constituency contains the coordinates.
+   */
+  async findByCoordinates(
+    longitude: number,
+    latitude: number,
+  ): Promise<any | null> {
+    const result = await this.prisma.$queryRaw<any[]>`
+      SELECT 
+        ogc_fid, 
+        st_name, 
+        dist_name, 
+        ac_no, 
+        ac_name, 
+        pc_name,
+        ST_AsText(geom) as geom_wkt
+      FROM assembly_constituencies
+      WHERE ST_Contains(
+        geom, 
+        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)
+      )
+      LIMIT 1;
+    `;
+    return result[0] || null;
+  }
 }

@@ -67,4 +67,21 @@ describe('AssemblyConstituencyService', () => {
       expect(prismaService.$queryRaw).toHaveBeenCalled();
     });
   });
+
+  describe('findByCoordinates', () => {
+    it('should return a containing constituency if found', async () => {
+      jest.spyOn(prismaService, '$queryRaw').mockResolvedValueOnce([
+        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
+      ]);
+      const result = await service.findByCoordinates(80.0, 13.0);
+      expect(result).toEqual({ ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' });
+      expect(prismaService.$queryRaw).toHaveBeenCalled();
+    });
+
+    it('should return null if no constituency matches', async () => {
+      jest.spyOn(prismaService, '$queryRaw').mockResolvedValueOnce([]);
+      const result = await service.findByCoordinates(80.0, 13.0);
+      expect(result).toBeNull();
+    });
+  });
 });

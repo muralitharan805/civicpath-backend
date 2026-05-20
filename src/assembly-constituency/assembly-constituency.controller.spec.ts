@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AssemblyConstituencyController } from './assembly-constituency.controller';
 import { AssemblyConstituencyService } from './assembly-constituency.service';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('AssemblyConstituencyController', () => {
   let controller: AssemblyConstituencyController;
@@ -15,6 +15,7 @@ describe('AssemblyConstituencyController', () => {
     findNearCoordinate: jest.fn().mockResolvedValue([
       { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
     ]),
+    findByCoordinates: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -73,6 +74,31 @@ describe('AssemblyConstituencyController', () => {
       await expect(
         controller.getNearCoordinates('invalid', '13.0', 5),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('findInsideBoundary', () => {
+    it('should return the containing constituency if found', async () => {
+      const mockResult = { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' };
+      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(mockResult);
+
+      const result = await controller.findInsideBoundary({
+        latitude: 13.0,
+        longitude: 80.0,
+      });
+      expect(result).toEqual(mockResult);
+      expect(service.findByCoordinates).toHaveBeenCalledWith(80.0, 13.0);
+    });
+
+    it('should throw NotFoundException if no constituency contains coordinates', async () => {
+      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(null);
+
+      await expect(
+        controller.findInsideBoundary({
+          latitude: 13.0,
+          longitude: 80.0,
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
