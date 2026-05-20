@@ -22,6 +22,14 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
+  // Enable graceful shutdown hooks for zero-downtime reloads
+  app.enableShutdownHooks();
+
   await app.listen(process.env.PORT ?? 3000);
+
+  // Send ready signal to PM2 for zero-downtime deployments
+  if (process.send) {
+    process.send('ready');
+  }
 }
 bootstrap();
