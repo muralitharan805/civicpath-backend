@@ -16,6 +16,7 @@ describe('AssemblyConstituencyController', () => {
       { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
     ]),
     findByCoordinates: jest.fn(),
+    findParliamentByCoordinates: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -78,20 +79,27 @@ describe('AssemblyConstituencyController', () => {
   });
 
   describe('findInsideBoundary', () => {
-    it('should return the containing constituency if found', async () => {
-      const mockResult = { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' };
-      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(mockResult);
+    it('should return containing constituencies if found', async () => {
+      const mockAssemblyResult = { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' };
+      const mockParliamentResult = { ogc_fid: 10, st_name: 'NAGALAND', pc_name: 'Nagaland' };
+      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(mockAssemblyResult as any);
+      jest.spyOn(service, 'findParliamentByCoordinates').mockResolvedValueOnce(mockParliamentResult as any);
 
       const result = await controller.findInsideBoundary({
         latitude: 13.0,
         longitude: 80.0,
       });
-      expect(result).toEqual(mockResult);
+      expect(result).toEqual({
+        assemblyConstituency: mockAssemblyResult,
+        parliamentConstituency: mockParliamentResult,
+      });
       expect(service.findByCoordinates).toHaveBeenCalledWith(80.0, 13.0);
+      expect(service.findParliamentByCoordinates).toHaveBeenCalledWith(80.0, 13.0);
     });
 
-    it('should throw NotFoundException if no constituency contains coordinates', async () => {
+    it('should throw NotFoundException if neither constituency contains coordinates', async () => {
       jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(null);
+      jest.spyOn(service, 'findParliamentByCoordinates').mockResolvedValueOnce(null);
 
       await expect(
         controller.findInsideBoundary({

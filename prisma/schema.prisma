@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
 }
 
 model assembly_constituencies {
@@ -27,4 +29,23 @@ model assembly_constituencies {
   @@index([geom], map: "assembly_constituencies_geom_geom_idx", type: Gist)
 }
 
+model parliment_constituencies {
+  ogc_fid Int                      @id @default(autoincrement())
+  st_name String?                  @db.VarChar(254)
+  pc_name String?                  @db.VarChar(254)
+  st_code String?                  @db.VarChar(3)
+  pc_code Decimal?                 @db.Decimal(4, 0)
+  res     String?                  @db.VarChar(4)
+  geom    Unsupported("geometry")?
 
+  @@index([geom], map: "parliment_constituencies_geom_geom_idx", type: Gist)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}

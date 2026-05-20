@@ -1,6 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+export interface AssemblyConstituency {
+  ogc_fid: number;
+  st_name: string | null;
+  dist_name: string | null;
+  ac_no: number | string | null;
+  ac_name: string | null;
+  pc_name: string | null;
+  geom_wkt: string | null;
+}
+
+export interface ParliamentConstituency {
+  ogc_fid: number;
+  st_name: string | null;
+  pc_name: string | null;
+  st_code: string | null;
+  pc_code: number | string | null;
+  res: string | null;
+  geom_wkt: string | null;
+}
+
 @Injectable()
 export class AssemblyConstituencyService {
   constructor(private readonly prisma: PrismaService) {}
@@ -61,8 +81,8 @@ export class AssemblyConstituencyService {
   async findByCoordinates(
     longitude: number,
     latitude: number,
-  ): Promise<any | null> {
-    const result = await this.prisma.$queryRaw<any[]>`
+  ): Promise<AssemblyConstituency | null> {
+    const result = await this.prisma.$queryRaw<AssemblyConstituency[]>`
       SELECT 
         ogc_fid, 
         st_name, 
@@ -80,4 +100,32 @@ export class AssemblyConstituencyService {
     `;
     return result[0] || null;
   }
+
+  /**
+   * Finds the single parliament constituency that contains the given coordinate.
+   * Returns null if no constituency contains the coordinates.
+   */
+  async findParliamentByCoordinates(
+    longitude: number,
+    latitude: number,
+  ): Promise<ParliamentConstituency | null> {
+    const result = await this.prisma.$queryRaw<ParliamentConstituency[]>`
+      SELECT 
+        ogc_fid, 
+        st_name, 
+        pc_name, 
+        st_code, 
+        pc_code, 
+        res,
+        ST_AsText(geom) as geom_wkt
+      FROM parliment_constituencies
+      WHERE ST_Contains(
+        geom, 
+        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)
+      )
+      LIMIT 1;
+    `;
+    return result[0] || null;
+  }
 }
+

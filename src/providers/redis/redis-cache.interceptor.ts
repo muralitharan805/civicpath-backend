@@ -11,6 +11,9 @@ import { RedisService } from './redis.service';
 
 @Injectable()
 export class RedisCacheInterceptor implements NestInterceptor {
+  // Default H3 resolution (10 = ~15,000 sq meters)
+  private readonly defaultH3Resolution = 10;
+
   constructor(private readonly redisService: RedisService) { }
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
@@ -31,8 +34,8 @@ export class RedisCacheInterceptor implements NestInterceptor {
         const lat = parseFloat(request.body.latitude);
         const lon = parseFloat(request.body.longitude);
         if (!isNaN(lat) && !isNaN(lon)) {
-          // Resolution 10 creates a hexagon of roughly 15,000 square meters
-          const h3Index = latLngToCell(lat, lon, 10);
+          // Use the class property for the resolution
+          const h3Index = latLngToCell(lat, lon, this.defaultH3Resolution);
           cacheKey += `:h3:${h3Index}`;
         } else {
           cacheKey += `:${JSON.stringify(request.body)}`;

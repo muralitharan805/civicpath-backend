@@ -20,4 +20,4 @@ import { RedisModule } from './providers/redis/redis.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

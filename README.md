@@ -31,6 +31,56 @@
 $ pnpm install
 ```
 
+## Database Setup & Migrations
+
+This project utilizes **Prisma ORM** with **PostgreSQL (PostGIS)**.
+
+### 1. Database Initialization & Migration Resolution (Existing Database)
+
+If your local database already has the existing tables (`assembly_constituencies` and `parliment_constituencies`), running standard migrations will fail because they attempt to recreate these tables.
+
+To mark both the initial migration (`0_init`) and the parliament constituencies migration (`20260520124300_add_parliment_constituencies`) as already applied without executing their SQL, run:
+
+```
+pnpm prisma db pull
+```
+```bash
+$ pnpm prisma:resolve
+```
+
+*(Alternatively, you can run: `$ pnpm prisma migrate resolve --applied 0_init && pnpm prisma migrate resolve --applied 20260520124300_add_parliment_constituencies`)*
+
+### 2. Standard Migrations
+
+For deploying migrations in production or staging environments:
+
+```bash
+$ pnpm prisma:deploy
+```
+
+*(Alternatively, you can run `$ pnpm prisma migrate deploy`)*
+
+For development, when you make changes to `prisma/schema.prisma` and want to generate new migrations:
+
+```bash
+$ pnpm prisma:migrate
+```
+
+*(Alternatively, you can run `$ pnpm prisma migrate dev`)*
+
+### 3. Generate Prisma Client
+
+To regenerate the Prisma Client types:
+
+```bash
+$ pnpm prisma:generate
+```
+
+*(Alternatively, you can run `$ pnpm prisma generate`)*
+
+```
+npx prisma migrate diff   --from-empty   --to-schema-datamodel prisma/schema.prisma   --script > baseline.sql
+```
 ## Compile and run the project
 
 ```bash

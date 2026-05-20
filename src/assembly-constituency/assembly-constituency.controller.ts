@@ -11,9 +11,18 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { AssemblyConstituencyService } from './assembly-constituency.service';
+import {
+  AssemblyConstituencyService,
+  AssemblyConstituency,
+  ParliamentConstituency,
+} from './assembly-constituency.service';
 import { FindByCoordinatesDto } from './dto/find-by-coordinates.dto';
 import { RedisCacheInterceptor } from '../providers/redis/redis-cache.interceptor';
+
+export interface ConstituencyBoundaryResponse {
+  assemblyConstituency: AssemblyConstituency | null;
+  parliamentConstituency: ParliamentConstituency | null;
+}
 
 @ApiTags('assembly-constituencies')
 @UseInterceptors(RedisCacheInterceptor)
@@ -80,20 +89,29 @@ export class AssemblyConstituencyController {
   @Post('inside')
   async findInsideBoundary(
     @Body() findByCoordinatesDto: FindByCoordinatesDto,
-  ): Promise<any> {
+  ): Promise<ConstituencyBoundaryResponse> {
     const { latitude, longitude } = findByCoordinatesDto;
-    const constituency =
-      await this.assemblyConstituencyService.findByCoordinates(
+    const [assemblyConstituency, parliamentConstituency] = await Promise.all([
+      this.assemblyConstituencyService.findByCoordinates(
         longitude,
         latitude,
-      );
+      ),
+      this.assemblyConstituencyService.findParliamentByCoordinates(
+        longitude,
+        latitude,
+      ),
+    ]);
 
-    if (!constituency) {
+    if (!assemblyConstituency && !parliamentConstituency) {
       throw new NotFoundException(
-        `No assembly constituency boundary contains the coordinates (lat: ${latitude}, lon: ${longitude}).`,
+        `No assembly or parliament constituency boundary contains the coordinates (lat: ${latitude}, lon: ${longitude}).`,
       );
     }
 
-    return constituency;
+    return {
+      assemblyConstituency,
+      parliamentConstituency,
+    };
   }
 }
+
