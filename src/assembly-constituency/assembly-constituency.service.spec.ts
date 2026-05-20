@@ -84,21 +84,4 @@ describe('AssemblyConstituencyService', () => {
       expect(result).toBeNull();
     });
   });
-
-  describe('findParliamentByCoordinates', () => {
-    it('should return a containing parliament constituency if found', async () => {
-      jest.spyOn(prismaService, '$queryRaw').mockResolvedValueOnce([
-        { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' },
-      ]);
-      const result = await service.findParliamentByCoordinates(80.0, 13.0);
-      expect(result).toEqual({ ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' });
-      expect(prismaService.$queryRaw).toHaveBeenCalled();
-    });
-
-    it('should return null if no parliament constituency matches', async () => {
-      jest.spyOn(prismaService, '$queryRaw').mockResolvedValueOnce([]);
-      const result = await service.findParliamentByCoordinates(80.0, 13.0);
-      expect(result).toBeNull();
-    });
-  });
 });

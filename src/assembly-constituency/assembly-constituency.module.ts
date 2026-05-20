@@ -5,5 +5,6 @@ import { AssemblyConstituencyController } from './assembly-constituency.controll
 @Module({
   controllers: [AssemblyConstituencyController],
   providers: [AssemblyConstituencyService],
+  exports: [AssemblyConstituencyService],
 })
 export class AssemblyConstituencyModule {}

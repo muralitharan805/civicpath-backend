@@ -1,36 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AssemblyConstituencyController } from './assembly-constituency.controller';
-import { AssemblyConstituencyService } from './assembly-constituency.service';
+import { ParliamentConstituencyController } from './parliament-constituency.controller';
+import { ParliamentConstituencyService } from './parliament-constituency.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-describe('AssemblyConstituencyController', () => {
-  let controller: AssemblyConstituencyController;
-  let service: AssemblyConstituencyService;
+describe('ParliamentConstituencyController', () => {
+  let controller: ParliamentConstituencyController;
+  let service: ParliamentConstituencyService;
 
-  const mockAssemblyConstituencyService = {
-    count: jest.fn().mockResolvedValue(4182),
+  const mockParliamentConstituencyService = {
+    count: jest.fn().mockResolvedValue(543),
     findMany: jest.fn().mockResolvedValue([
-      { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
+      { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' },
     ]),
     findNearCoordinate: jest.fn().mockResolvedValue([
-      { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
+      { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA', distance_meters: 200 },
     ]),
     findByCoordinates: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AssemblyConstituencyController],
+      controllers: [ParliamentConstituencyController],
       providers: [
         {
-          provide: AssemblyConstituencyService,
-          useValue: mockAssemblyConstituencyService,
+          provide: ParliamentConstituencyService,
+          useValue: mockParliamentConstituencyService,
         },
       ],
     }).compile();
 
-    controller = module.get<AssemblyConstituencyController>(AssemblyConstituencyController);
-    service = module.get<AssemblyConstituencyService>(AssemblyConstituencyService);
+    controller = module.get<ParliamentConstituencyController>(ParliamentConstituencyController);
+    service = module.get<ParliamentConstituencyService>(ParliamentConstituencyService);
   });
 
   it('should be defined', () => {
@@ -38,39 +38,39 @@ describe('AssemblyConstituencyController', () => {
   });
 
   describe('getCount', () => {
-    it('should return count object', async () => {
+    it('should return total count', async () => {
       const result = await controller.getCount();
-      expect(result).toEqual({ count: 4182 });
+      expect(result).toEqual({ count: 543 });
       expect(service.count).toHaveBeenCalled();
     });
   });
 
   describe('getConstituencies', () => {
-    it('should return constituencies list', async () => {
+    it('should return list of constituencies', async () => {
       const result = await controller.getConstituencies(10);
       expect(result).toEqual([
-        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
+        { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' },
       ]);
       expect(service.findMany).toHaveBeenCalledWith(10);
     });
   });
 
   describe('getNearCoordinates', () => {
-    it('should return nearest constituencies', async () => {
+    it('should return nearest parliament constituencies', async () => {
       const result = await controller.getNearCoordinates('80.0', '13.0', 5);
       expect(result).toEqual([
-        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
+        { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA', distance_meters: 200 },
       ]);
       expect(service.findNearCoordinate).toHaveBeenCalledWith(80.0, 13.0, 5);
     });
 
-    it('should throw BadRequestException if lon or lat is missing', async () => {
+    it('should throw BadRequestException if coordinate fields are missing', async () => {
       await expect(
         controller.getNearCoordinates(undefined, '13.0', 5),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException if coordinates are invalid numbers', async () => {
+    it('should throw BadRequestException if coordinates are not numbers', async () => {
       await expect(
         controller.getNearCoordinates('invalid', '13.0', 5),
       ).rejects.toThrow(BadRequestException);
@@ -78,19 +78,19 @@ describe('AssemblyConstituencyController', () => {
   });
 
   describe('findInsideBoundary', () => {
-    it('should return containing constituency if found', async () => {
-      const mockAssemblyResult = { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' };
-      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(mockAssemblyResult as any);
+    it('should returncontaining constituency if found', async () => {
+      const mockResult = { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' };
+      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(mockResult as any);
 
       const result = await controller.findInsideBoundary({
         latitude: 13.0,
         longitude: 80.0,
       });
-      expect(result).toEqual(mockAssemblyResult);
+      expect(result).toEqual(mockResult);
       expect(service.findByCoordinates).toHaveBeenCalledWith(80.0, 13.0);
     });
 
-    it('should throw NotFoundException if constituency is not found', async () => {
+    it('should throw NotFoundException if no constituency contains coordinate', async () => {
       jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(null);
 
       await expect(

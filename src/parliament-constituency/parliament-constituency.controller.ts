@@ -12,39 +12,39 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import {
-  AssemblyConstituencyService,
-  AssemblyConstituency,
-} from './assembly-constituency.service';
+  ParliamentConstituencyService,
+  ParliamentConstituency,
+} from './parliament-constituency.service';
 import { FindByCoordinatesDto } from './dto/find-by-coordinates.dto';
 import { RedisCacheInterceptor } from '../providers/redis/redis-cache.interceptor';
 
-@ApiTags('assembly-constituencies')
+@ApiTags('parliament-constituencies')
 @UseInterceptors(RedisCacheInterceptor)
-@Controller('assembly-constituencies')
-export class AssemblyConstituencyController {
+@Controller('parliament-constituencies')
+export class ParliamentConstituencyController {
   constructor(
-    private readonly assemblyConstituencyService: AssemblyConstituencyService,
+    private readonly parliamentConstituencyService: ParliamentConstituencyService,
   ) {}
 
-  @ApiOperation({ summary: 'Get total count of assembly constituencies' })
+  @ApiOperation({ summary: 'Get total count of parliament constituencies' })
   @ApiResponse({ status: 200, description: 'Return the total count.' })
   @Get('count')
   async getCount(): Promise<{ count: number }> {
-    const count = await this.assemblyConstituencyService.count();
+    const count = await this.parliamentConstituencyService.count();
     return { count };
   }
 
-  @ApiOperation({ summary: 'List paginated assembly constituencies' })
+  @ApiOperation({ summary: 'List paginated parliament constituencies' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Return list of constituencies.' })
   @Get()
   async getConstituencies(
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ): Promise<any[]> {
-    return this.assemblyConstituencyService.findMany(limit);
+  ): Promise<ParliamentConstituency[]> {
+    return this.parliamentConstituencyService.findMany(limit);
   }
 
-  @ApiOperation({ summary: 'Find constituencies near coordinates' })
+  @ApiOperation({ summary: 'Find parliament constituencies near coordinates' })
   @ApiQuery({ name: 'lon', required: true, type: String })
   @ApiQuery({ name: 'lat', required: true, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -70,34 +70,32 @@ export class AssemblyConstituencyController {
       );
     }
 
-    return this.assemblyConstituencyService.findNearCoordinate(
+    return this.parliamentConstituencyService.findNearCoordinate(
       lonNum,
       latNum,
       limit,
     );
   }
 
-  @ApiOperation({ summary: 'Find constituency containing specific coordinates' })
+  @ApiOperation({ summary: 'Find parliament constituency containing specific coordinates' })
   @ApiResponse({ status: 200, description: 'Return the containing constituency.' })
   @ApiResponse({ status: 404, description: 'No constituency found for these coordinates.' })
   @Post('inside')
   async findInsideBoundary(
     @Body() findByCoordinatesDto: FindByCoordinatesDto,
-  ): Promise<AssemblyConstituency> {
+  ): Promise<ParliamentConstituency> {
     const { latitude, longitude } = findByCoordinatesDto;
-    const constituency = await this.assemblyConstituencyService.findByCoordinates(
+    const constituency = await this.parliamentConstituencyService.findByCoordinates(
       longitude,
       latitude,
     );
 
     if (!constituency) {
       throw new NotFoundException(
-        `No assembly constituency boundary contains the coordinates (lat: ${latitude}, lon: ${longitude}).`,
+        `No parliament constituency boundary contains the coordinates (lat: ${latitude}, lon: ${longitude}).`,
       );
     }
 
     return constituency;
   }
 }
-
-
