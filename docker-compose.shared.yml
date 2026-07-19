@@ -21,6 +21,8 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "${PORT:-3001}:3000"
+    volumes:
+      - ${MAPS_PATH:-/home/seyalicraft/project/maps}:/app/maps:ro
     restart: always
     networks:
       - db_network

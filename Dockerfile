@@ -32,6 +32,9 @@ FROM base AS runner
 
 ENV NODE_ENV=production
 
+# Install GDAL (ogr2ogr) for GIS data synchronization
+RUN apk add --no-cache gdal
+
 
 # Copy package.json, lockfile, and prisma schema
 COPY package.json pnpm-lock.yaml ./
