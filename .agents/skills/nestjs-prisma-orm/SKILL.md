@@ -33,6 +33,17 @@ To architect, implement, and maintain a highly efficient, type-safe database acc
 
 5. **Use migration when create and update models**
 
+## Multi-Schema Support & Raw Query Best Practices
+
+When working with PostgreSQL multi-schema layouts (e.g. `schemas = ["core", "public"]`) configured in the `schema.prisma`:
+
+### 1. Prisma Client Native Queries
+- **Automatic Schema Mapping:** Standard client queries (e.g., `this.prisma.assembly_constituencies.findMany()`) are compiled automatically by Prisma Client to use the correct schema mapping defined in `schema.prisma` (via `@@schema("core")`). No manual schema declaration is needed in services or controllers.
+
+### 2. Raw SQL Queries (`$queryRaw` / `$executeRaw`)
+- **Explicit Schema Prefixing:** Raw SQL queries bypass standard Prisma Client compile-time table mappings. Therefore, raw queries MUST explicitly prefix tables with the target schema name (e.g., `FROM core.assembly_constituencies` instead of `FROM assembly_constituencies`).
+- **Postgres Connection Search Path:** Alternatively, you can configure the search path at the connection string level using `options=-c search_path=core,public` inside the `DATABASE_URL` config string. However, explicitly defining schemas in the SQL queries is cleaner for repository integrity and documentation purposes.
+
 ## Constraints & Output Rules
 
 * **Zero Placeholders:** Do not emit boilerplate skeletons with `// TODO:`, `// implement queries here`, or partial class definitions. Every service, module, or DTO file must be fully written and operational out of the box.

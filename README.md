@@ -37,6 +37,26 @@ cp .env.example .env
 
 This project utilizes **Prisma ORM** with **PostgreSQL (PostGIS)**.
 
+### Database Schema Separation (Multi-Schema Setup)
+
+This project uses PostgreSQL multi-schema capabilities via Prisma's `multiSchema` preview feature:
+- **`public`**: Contains general public tables and schemas (e.g., standard spatial reference system tables).
+- **`core`**: Contains all primary spatial constituency and GIS data tables (`assembly_constituencies`, `districts`, `parliment_constituencies`).
+
+#### How to use Multi-Schema Queries:
+
+1. **Standard Prisma Client Queries:**
+   Prisma compiles them using schema metadata mapping from `schema.prisma` automatically:
+   ```typescript
+   this.prisma.assembly_constituencies.count() // Automatically targets core.assembly_constituencies
+   ```
+
+2. **Raw Spatial SQL Queries (`$queryRaw`):**
+   Raw queries bypass standard Prisma Client metadata compilation. Therefore, you **MUST** prefix raw queries with their respective schema namespace:
+   ```typescript
+   this.prisma.$queryRaw`SELECT * FROM core.assembly_constituencies WHERE ...`
+   ```
+
 ### 1. Initializing Migrations (Baselining)
 If your database already has the existing tables (`assembly_constituencies` and `parliment_constituencies`):
 
