@@ -81,6 +81,7 @@ function runOgr2Ogr(shapefilePath: string, targetTable: string): void {
     '-lco', 'GEOMETRY_NAME=geom',
     '-lco', 'FID=ogc_fid',
     '-lco', 'SCHEMA=staging',
+    '-lco', 'OVERWRITE=YES',
     '-overwrite'
   ];
 
