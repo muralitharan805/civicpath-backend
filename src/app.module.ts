@@ -25,4 +25,3 @@ import { RedisModule } from './providers/redis/redis.module';
   providers: [AppService],
 })
 export class AppModule {}
-

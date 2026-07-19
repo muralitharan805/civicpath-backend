@@ -58,7 +58,7 @@ export class AssemblyConstituencyService {
           geom, 
           ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
         ) as distance_meters
-      FROM assembly_constituencies
+      FROM core.assembly_constituencies
       ORDER BY geom <-> ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)
       LIMIT ${limit};
     `;
@@ -81,7 +81,7 @@ export class AssemblyConstituencyService {
         ac_name, 
         pc_name,
         ST_AsText(geom) as geom_wkt
-      FROM assembly_constituencies
+      FROM core.assembly_constituencies
       WHERE ST_Contains(
         geom, 
         ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)
@@ -91,5 +91,3 @@ export class AssemblyConstituencyService {
     return result[0] || null;
   }
 }
-
-

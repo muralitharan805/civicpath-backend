@@ -1,2 +1,3 @@
--- Automatically load and register the pgvector extension upon default database initialization
-CREATE EXTENSION IF NOT EXISTS vector;
+-- Automatically load and register extensions upon default database initialization
+CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS postgis SCHEMA public;

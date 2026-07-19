@@ -21,24 +21,26 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:resolve": "prisma migrate resolve --applied --name"
+    "prisma:resolve": "prisma migrate resolve --applied --name",
+    "db:sync": "ts-node scripts/sync-gis-data.ts"
   },
   "dependencies": {
+    "@nestjs/cache-manager": "^2.2.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^8.1.1",
     "@prisma/client": "^6.1.0",
+    "cache-manager": "^5.3.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "dotenv": "^17.4.2",
+    "h3-js": "^4.1.0",
+    "ioredis": "^5.3.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "swagger-ui-express": "^5.0.1",
-    "ioredis": "^5.3.2",
-    "@nestjs/cache-manager": "^2.2.0",
-    "cache-manager": "^5.3.2",
-    "h3-js": "^4.1.0"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

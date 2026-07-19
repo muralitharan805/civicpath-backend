@@ -77,18 +77,27 @@ export class AssemblyConstituencyController {
     );
   }
 
-  @ApiOperation({ summary: 'Find constituency containing specific coordinates' })
-  @ApiResponse({ status: 200, description: 'Return the containing constituency.' })
-  @ApiResponse({ status: 404, description: 'No constituency found for these coordinates.' })
+  @ApiOperation({
+    summary: 'Find constituency containing specific coordinates',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return the containing constituency.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No constituency found for these coordinates.',
+  })
   @Post('inside')
   async findInsideBoundary(
     @Body() findByCoordinatesDto: FindByCoordinatesDto,
   ): Promise<AssemblyConstituency> {
     const { latitude, longitude } = findByCoordinatesDto;
-    const constituency = await this.assemblyConstituencyService.findByCoordinates(
-      longitude,
-      latitude,
-    );
+    const constituency =
+      await this.assemblyConstituencyService.findByCoordinates(
+        longitude,
+        latitude,
+      );
 
     if (!constituency) {
       throw new NotFoundException(
@@ -99,5 +108,3 @@ export class AssemblyConstituencyController {
     return constituency;
   }
 }
-
-

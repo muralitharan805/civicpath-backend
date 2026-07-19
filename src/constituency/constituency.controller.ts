@@ -31,9 +31,18 @@ export class ConstituencyController {
     private readonly parliamentService: ParliamentConstituencyService,
   ) {}
 
-  @ApiOperation({ summary: 'Find both assembly and parliament constituencies containing specific coordinates' })
-  @ApiResponse({ status: 200, description: 'Return containing assembly and parliament constituencies.' })
-  @ApiResponse({ status: 404, description: 'No boundary found containing these coordinates.' })
+  @ApiOperation({
+    summary:
+      'Find both assembly and parliament constituencies containing specific coordinates',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return containing assembly and parliament constituencies.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No boundary found containing these coordinates.',
+  })
   @Post('inside')
   async findInsideBoundary(
     @Body() findByCoordinatesDto: FindByCoordinatesDto,

@@ -14,9 +14,12 @@ export class RedisCacheInterceptor implements NestInterceptor {
   // Default H3 resolution (10 = ~15,000 sq meters)
   private readonly defaultH3Resolution = 10;
 
-  constructor(private readonly redisService: RedisService) { }
+  constructor(private readonly redisService: RedisService) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
 
     // We only cache GET and POST requests
@@ -28,7 +31,11 @@ export class RedisCacheInterceptor implements NestInterceptor {
     let cacheKey = `civicpath:cache:${request.method}:${request.url}`;
 
     // If it's a POST request (like the /inside boundary query), we MUST include the body in the cache key
-    if (request.method === 'POST' && request.body && Object.keys(request.body).length > 0) {
+    if (
+      request.method === 'POST' &&
+      request.body &&
+      Object.keys(request.body).length > 0
+    ) {
       // If the body contains latitude and longitude, convert them to an H3 Hexagon ID!
       if (request.body.latitude && request.body.longitude) {
         const lat = parseFloat(request.body.latitude);
@@ -53,7 +60,9 @@ export class RedisCacheInterceptor implements NestInterceptor {
       return of(cachedResponse);
     }
 
-    console.log(`[Redis Interceptor] Cache MISS for key: ${cacheKey}. Processing request...`);
+    console.log(
+      `[Redis Interceptor] Cache MISS for key: ${cacheKey}. Processing request...`,
+    );
 
     // If no cache, process the route handler and then save the result to Redis
     return next.handle().pipe(

@@ -1,148 +1,165 @@
+# CivicPath Backend
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+CivicPath Backend is a high-performance, scalable geospatial backend service built using **NestJS**, **TypeScript**, **PostgreSQL**, **PostGIS**, and **Prisma ORM**. It enables mapping and querying geographic boundaries for parliamentary and assembly constituencies, as well as executing advanced spatial containment and proximity queries.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Key Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- 🗺️ **GIS Boundary Queries**: Fetch assembly and parliamentary constituencies based on coordinate containment (`ST_Contains`).
+- 📍 **Proximity Searches**: Query constituencies and districts near a specific latitude/longitude using fast spatial indexing (`<->` operator).
+- ⚡ **Caching Layer**: Integrated Redis caching for frequent coordinate queries.
+- 🔄 **Staging-to-Production Sync Pipeline**: Safe ETL pipeline to import shapefiles via `ogr2ogr` into an isolated database schema, preventing migration overrides and database drift.
 
-## Project setup
+---
 
+## Project Setup
+
+### 1. Install Dependencies
+Make sure you are using **pnpm** as the package manager:
 ```bash
-$ pnpm install
+pnpm install
 ```
+
+### 2. Environment Configuration
+Copy the `.env.example` file to `.env` and fill in your database and Redis credentials:
+```bash
+cp .env.example .env
+```
+
+---
 
 ## Database Setup & Migrations
 
 This project utilizes **Prisma ORM** with **PostgreSQL (PostGIS)**.
 
-### 1. Database Initialization & Migration Resolution (Existing Database)
+### 1. Initializing Migrations (Baselining)
+If your database already has the existing tables (`assembly_constituencies` and `parliment_constituencies`):
 
-If your local database already has the existing tables (`assembly_constituencies` and `parliment_constituencies`), running standard migrations will fail because they attempt to recreate these tables.
-
-To mark both the initial migration (`0_init`) and the parliament constituencies migration (`20260520124300_add_parliment_constituencies`) as already applied without executing their SQL, run:
-
-```
-pnpm prisma db pull
-```
+To mark the initial migration (`20260520161407_init`) as already applied without executing its SQL and risking data loss, run:
 ```bash
-$ pnpm prisma:resolve
+pnpm prisma migrate resolve --applied "20260520161407_init"
 ```
-
-*(Alternatively, you can run: `$ pnpm prisma migrate resolve --applied 0_init && pnpm prisma migrate resolve --applied 20260520124300_add_parliment_constituencies`)*
 
 ### 2. Standard Migrations
-
-For deploying migrations in production or staging environments:
-
+When deploying migrations in production or staging environments:
 ```bash
-$ pnpm prisma:deploy
+pnpm prisma:deploy
 ```
+*(Alternatively: `pnpm prisma migrate deploy`)*
 
-*(Alternatively, you can run `$ pnpm prisma migrate deploy`)*
-
-For development, when you make changes to `prisma/schema.prisma` and want to generate new migrations:
-
+For development, when you make changes to `prisma/schema.prisma` and want to generate and apply a new migration:
 ```bash
-$ pnpm prisma:migrate
+pnpm prisma:migrate
 ```
-
-*(Alternatively, you can run `$ pnpm prisma migrate dev`)*
+*(Alternatively: `pnpm prisma migrate dev`)*
 
 ### 3. Generate Prisma Client
+To regenerate the Prisma Client TypeScript types:
+```bash
+pnpm prisma:generate
+```
+*(Alternatively: `pnpm prisma generate`)*
 
-To regenerate the Prisma Client types:
+---
+
+## GIS Import & Sync Pipeline
+
+We use a staging-to-production ETL workflow to import shapefiles. When importing, `ogr2ogr` writes to a dedicated `staging` database schema. This keeps staging tables isolated, meaning that running `npx prisma db pull` (which inspects the `public` schema) will not pollute your `schema.prisma`. After mapping the fields to production tables under the `public` schema, staging tables are automatically dropped.
+
+### How to Run the Sync Command
+
+You can run the entire pipeline (import and sync) using:
+```bash
+pnpm db:sync --assembly <assembly-shapefile-path> --parliament <parliament-shapefile-path>
+```
+
+**Example:**
+```bash
+pnpm db:sync --assembly assembly-constituencies/India_AC.shp --parliament parliamentary-constituencies/india_pc_2019.shp
+```
+
+*Note: If you have already imported the data into staging tables manually, simply running `pnpm db:sync` without arguments will map the fields to production and drop the staging tables.*
+
+---
+
+## Prisma Lifecycle Cheat Sheet
+
+### Scenario 1: Baselining (Existing DB with Tables and Data)
+If you connect to an existing database containing tables that aren't tracked by Prisma:
+1. Pull the schema:
+   ```bash
+   pnpm prisma db pull
+   ```
+2. Create a draft migration without applying it to the database:
+   ```bash
+   pnpm prisma migrate dev --name init --create-only
+   ```
+3. Mark the draft migration folder name as applied:
+   ```bash
+   pnpm prisma migrate resolve --applied "<migration_folder_name>"
+   ```
+
+### Scenario 2: Modifying or Adding Tables/Columns (Development Flow)
+When you need to modify database structures without altering the DB directly:
+1. Edit the models in your `prisma/schema.prisma` file.
+2. Run the development migration tool:
+   ```bash
+   pnpm prisma migrate dev --name <describe_your_change>
+   ```
+3. Commit the generated migration folder under `prisma/migrations` to Git.
+
+### Scenario 3: Local Prototyping (No Migrations Created)
+If you want to quickly sync your schema with your local database without creating migration history:
+```bash
+pnpm prisma db push
+```
+*Caution: This bypasses migration history and may cause data loss if you drop columns/tables.*
+
+### Scenario 4: Database Seeding
+To populate the database with default or dummy records:
+1. Configure `seed.ts` logic under the `prisma` directory.
+2. Run the seed script:
+   ```bash
+   pnpm prisma db seed
+   ```
+
+---
+
+## Compile and Run the Project
 
 ```bash
-$ pnpm prisma:generate
-```
+# development mode
+pnpm run start
 
-*(Alternatively, you can run `$ pnpm prisma generate`)*
-
-```
-npx prisma migrate diff   --from-empty   --to-schema-datamodel prisma/schema.prisma   --script > baseline.sql
-```
-## Compile and run the project
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
+# watch mode (development with reload)
+pnpm run start:dev
 
 # production mode
-$ pnpm run start:prod
+pnpm run start:prod
 ```
 
-## Run tests
+---
+
+## Run Tests
 
 ```bash
 # unit tests
-$ pnpm run test
+pnpm run test
 
 # e2e tests
-$ pnpm run test:e2e
+pnpm run test:e2e
 
 # test coverage
-$ pnpm run test:cov
+pnpm run test:cov
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is [MIT licensed](LICENSE).

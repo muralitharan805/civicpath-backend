@@ -9,12 +9,19 @@ describe('AssemblyConstituencyService', () => {
   const mockPrismaService = {
     assembly_constituencies: {
       count: jest.fn().mockResolvedValue(4182),
-      findMany: jest.fn().mockResolvedValue([
-        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
-      ]),
+      findMany: jest
+        .fn()
+        .mockResolvedValue([
+          { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
+        ]),
     },
     $queryRaw: jest.fn().mockResolvedValue([
-      { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
+      {
+        ogc_fid: 1,
+        st_name: 'NAGALAND',
+        ac_name: 'Tizit',
+        distance_meters: 100,
+      },
     ]),
   };
 
@@ -29,7 +36,9 @@ describe('AssemblyConstituencyService', () => {
       ],
     }).compile();
 
-    service = module.get<AssemblyConstituencyService>(AssemblyConstituencyService);
+    service = module.get<AssemblyConstituencyService>(
+      AssemblyConstituencyService,
+    );
     prismaService = module.get<PrismaService>(PrismaService);
   });
 
@@ -51,7 +60,9 @@ describe('AssemblyConstituencyService', () => {
       expect(result).toEqual([
         { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
       ]);
-      expect(prismaService.assembly_constituencies.findMany).toHaveBeenCalledWith({
+      expect(
+        prismaService.assembly_constituencies.findMany,
+      ).toHaveBeenCalledWith({
         take: 5,
         orderBy: { ogc_fid: 'asc' },
       });
@@ -62,7 +73,12 @@ describe('AssemblyConstituencyService', () => {
     it('should query the database using raw spatial query', async () => {
       const result = await service.findNearCoordinate(80.0, 13.0, 5);
       expect(result).toEqual([
-        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
+        {
+          ogc_fid: 1,
+          st_name: 'NAGALAND',
+          ac_name: 'Tizit',
+          distance_meters: 100,
+        },
       ]);
       expect(prismaService.$queryRaw).toHaveBeenCalled();
     });
@@ -70,11 +86,17 @@ describe('AssemblyConstituencyService', () => {
 
   describe('findByCoordinates', () => {
     it('should return a containing constituency if found', async () => {
-      jest.spyOn(prismaService, '$queryRaw').mockResolvedValueOnce([
-        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
-      ]);
+      jest
+        .spyOn(prismaService, '$queryRaw')
+        .mockResolvedValueOnce([
+          { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
+        ]);
       const result = await service.findByCoordinates(80.0, 13.0);
-      expect(result).toEqual({ ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' });
+      expect(result).toEqual({
+        ogc_fid: 1,
+        st_name: 'NAGALAND',
+        ac_name: 'Tizit',
+      });
       expect(prismaService.$queryRaw).toHaveBeenCalled();
     });
 

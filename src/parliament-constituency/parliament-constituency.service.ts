@@ -11,27 +11,6 @@ export interface ParliamentConstituency {
   geom_wkt: string | null;
 }
 
-export interface ParliamentConstituencyDb {
-  ogc_fid: number;
-  st_name: string | null;
-  pc_name: string | null;
-  st_code: string | null;
-  pc_code: string | number | null;
-  res: string | null;
-}
-
-export interface PrismaWithParliament {
-  parliment_constituencies: {
-    count(): Promise<number>;
-    findMany(args?: {
-      take?: number;
-      orderBy?: {
-        ogc_fid?: 'asc' | 'desc';
-      };
-    }): Promise<ParliamentConstituencyDb[]>;
-  };
-}
-
 @Injectable()
 export class ParliamentConstituencyService {
   constructor(private readonly prisma: PrismaService) {}
@@ -40,8 +19,7 @@ export class ParliamentConstituencyService {
    * Retrieves the total count of parliament constituencies.
    */
   async count(): Promise<number> {
-    const db = this.prisma as unknown as PrismaWithParliament;
-    return db.parliment_constituencies.count();
+    return this.prisma.parliment_constituencies.count();
   }
 
   /**
@@ -49,8 +27,7 @@ export class ParliamentConstituencyService {
    * Note: The 'geom' column is unsupported by standard Prisma queries and is automatically omitted.
    */
   async findMany(limit: number = 10): Promise<ParliamentConstituency[]> {
-    const db = this.prisma as unknown as PrismaWithParliament;
-    const results = await db.parliment_constituencies.findMany({
+    const results = await this.prisma.parliment_constituencies.findMany({
       take: limit,
       orderBy: {
         ogc_fid: 'asc',
@@ -91,7 +68,7 @@ export class ParliamentConstituencyService {
           geom, 
           ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
         ) as distance_meters
-      FROM parliment_constituencies
+      FROM core.parliment_constituencies
       ORDER BY geom <-> ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)
       LIMIT ${limit};
     `;
@@ -114,7 +91,7 @@ export class ParliamentConstituencyService {
         pc_code, 
         res,
         ST_AsText(geom) as geom_wkt
-      FROM parliment_constituencies
+      FROM core.parliment_constituencies
       WHERE ST_Contains(
         geom, 
         ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)

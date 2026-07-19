@@ -9,11 +9,18 @@ describe('ParliamentConstituencyController', () => {
 
   const mockParliamentConstituencyService = {
     count: jest.fn().mockResolvedValue(543),
-    findMany: jest.fn().mockResolvedValue([
-      { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' },
-    ]),
+    findMany: jest
+      .fn()
+      .mockResolvedValue([
+        { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' },
+      ]),
     findNearCoordinate: jest.fn().mockResolvedValue([
-      { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA', distance_meters: 200 },
+      {
+        ogc_fid: 1,
+        st_name: 'HIMACHAL PRADESH',
+        pc_name: 'KANGRA',
+        distance_meters: 200,
+      },
     ]),
     findByCoordinates: jest.fn(),
   };
@@ -29,8 +36,12 @@ describe('ParliamentConstituencyController', () => {
       ],
     }).compile();
 
-    controller = module.get<ParliamentConstituencyController>(ParliamentConstituencyController);
-    service = module.get<ParliamentConstituencyService>(ParliamentConstituencyService);
+    controller = module.get<ParliamentConstituencyController>(
+      ParliamentConstituencyController,
+    );
+    service = module.get<ParliamentConstituencyService>(
+      ParliamentConstituencyService,
+    );
   });
 
   it('should be defined', () => {
@@ -59,7 +70,12 @@ describe('ParliamentConstituencyController', () => {
     it('should return nearest parliament constituencies', async () => {
       const result = await controller.getNearCoordinates('80.0', '13.0', 5);
       expect(result).toEqual([
-        { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA', distance_meters: 200 },
+        {
+          ogc_fid: 1,
+          st_name: 'HIMACHAL PRADESH',
+          pc_name: 'KANGRA',
+          distance_meters: 200,
+        },
       ]);
       expect(service.findNearCoordinate).toHaveBeenCalledWith(80.0, 13.0, 5);
     });
@@ -79,8 +95,14 @@ describe('ParliamentConstituencyController', () => {
 
   describe('findInsideBoundary', () => {
     it('should returncontaining constituency if found', async () => {
-      const mockResult = { ogc_fid: 1, st_name: 'HIMACHAL PRADESH', pc_name: 'KANGRA' };
-      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(mockResult as any);
+      const mockResult = {
+        ogc_fid: 1,
+        st_name: 'HIMACHAL PRADESH',
+        pc_name: 'KANGRA',
+      };
+      jest
+        .spyOn(service, 'findByCoordinates')
+        .mockResolvedValueOnce(mockResult as any);
 
       const result = await controller.findInsideBoundary({
         latitude: 13.0,

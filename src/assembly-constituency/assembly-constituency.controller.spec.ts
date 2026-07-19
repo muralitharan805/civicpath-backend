@@ -9,11 +9,18 @@ describe('AssemblyConstituencyController', () => {
 
   const mockAssemblyConstituencyService = {
     count: jest.fn().mockResolvedValue(4182),
-    findMany: jest.fn().mockResolvedValue([
-      { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
-    ]),
+    findMany: jest
+      .fn()
+      .mockResolvedValue([
+        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' },
+      ]),
     findNearCoordinate: jest.fn().mockResolvedValue([
-      { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
+      {
+        ogc_fid: 1,
+        st_name: 'NAGALAND',
+        ac_name: 'Tizit',
+        distance_meters: 100,
+      },
     ]),
     findByCoordinates: jest.fn(),
   };
@@ -29,8 +36,12 @@ describe('AssemblyConstituencyController', () => {
       ],
     }).compile();
 
-    controller = module.get<AssemblyConstituencyController>(AssemblyConstituencyController);
-    service = module.get<AssemblyConstituencyService>(AssemblyConstituencyService);
+    controller = module.get<AssemblyConstituencyController>(
+      AssemblyConstituencyController,
+    );
+    service = module.get<AssemblyConstituencyService>(
+      AssemblyConstituencyService,
+    );
   });
 
   it('should be defined', () => {
@@ -59,7 +70,12 @@ describe('AssemblyConstituencyController', () => {
     it('should return nearest constituencies', async () => {
       const result = await controller.getNearCoordinates('80.0', '13.0', 5);
       expect(result).toEqual([
-        { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit', distance_meters: 100 },
+        {
+          ogc_fid: 1,
+          st_name: 'NAGALAND',
+          ac_name: 'Tizit',
+          distance_meters: 100,
+        },
       ]);
       expect(service.findNearCoordinate).toHaveBeenCalledWith(80.0, 13.0, 5);
     });
@@ -79,8 +95,14 @@ describe('AssemblyConstituencyController', () => {
 
   describe('findInsideBoundary', () => {
     it('should return containing constituency if found', async () => {
-      const mockAssemblyResult = { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' };
-      jest.spyOn(service, 'findByCoordinates').mockResolvedValueOnce(mockAssemblyResult as any);
+      const mockAssemblyResult = {
+        ogc_fid: 1,
+        st_name: 'NAGALAND',
+        ac_name: 'Tizit',
+      };
+      jest
+        .spyOn(service, 'findByCoordinates')
+        .mockResolvedValueOnce(mockAssemblyResult as any);
 
       const result = await controller.findInsideBoundary({
         latitude: 13.0,

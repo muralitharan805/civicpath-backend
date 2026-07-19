@@ -33,8 +33,12 @@ describe('ConstituencyController', () => {
     }).compile();
 
     controller = module.get<ConstituencyController>(ConstituencyController);
-    assemblyService = module.get<AssemblyConstituencyService>(AssemblyConstituencyService);
-    parliamentService = module.get<ParliamentConstituencyService>(ParliamentConstituencyService);
+    assemblyService = module.get<AssemblyConstituencyService>(
+      AssemblyConstituencyService,
+    );
+    parliamentService = module.get<ParliamentConstituencyService>(
+      ParliamentConstituencyService,
+    );
   });
 
   it('should be defined', () => {
@@ -43,11 +47,21 @@ describe('ConstituencyController', () => {
 
   describe('findInsideBoundary', () => {
     it('should return combined constituencies when found', async () => {
-      const mockAssembly = { ogc_fid: 1, st_name: 'NAGALAND', ac_name: 'Tizit' };
-      const mockParliament = { ogc_fid: 10, st_name: 'NAGALAND', pc_name: 'Nagaland' };
+      const mockAssembly = {
+        ogc_fid: 1,
+        st_name: 'NAGALAND',
+        ac_name: 'Tizit',
+      };
+      const mockParliament = {
+        ogc_fid: 10,
+        st_name: 'NAGALAND',
+        pc_name: 'Nagaland',
+      };
 
       mockAssemblyService.findByCoordinates.mockResolvedValueOnce(mockAssembly);
-      mockParliamentService.findByCoordinates.mockResolvedValueOnce(mockParliament);
+      mockParliamentService.findByCoordinates.mockResolvedValueOnce(
+        mockParliament,
+      );
 
       const result = await controller.findInsideBoundary({
         latitude: 13.0,
@@ -58,8 +72,14 @@ describe('ConstituencyController', () => {
         assemblyConstituency: mockAssembly,
         parliamentConstituency: mockParliament,
       });
-      expect(assemblyService.findByCoordinates).toHaveBeenCalledWith(80.0, 13.0);
-      expect(parliamentService.findByCoordinates).toHaveBeenCalledWith(80.0, 13.0);
+      expect(assemblyService.findByCoordinates).toHaveBeenCalledWith(
+        80.0,
+        13.0,
+      );
+      expect(parliamentService.findByCoordinates).toHaveBeenCalledWith(
+        80.0,
+        13.0,
+      );
     });
 
     it('should throw NotFoundException if neither constituency is found', async () => {

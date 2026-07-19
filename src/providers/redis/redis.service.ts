@@ -4,12 +4,12 @@ import { REDIS_CLIENT } from './redis.constants';
 
 @Injectable()
 export class RedisService implements OnApplicationShutdown {
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: Redis) {}
 
   async onApplicationShutdown(signal?: string) {
-    console.log(`Application shutting down (${signal}), closing Redis connection.`);
+    console.log(
+      `Application shutting down (${signal}), closing Redis connection.`,
+    );
     await this.redisClient.quit();
   }
 
