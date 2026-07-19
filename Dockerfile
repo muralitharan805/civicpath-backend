@@ -23,6 +23,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 FROM dependencies AS build
 
 COPY . .
+RUN pnpm prisma:generate
 RUN pnpm run build
 
 # --- Stage 4: Production Runner ---
@@ -31,9 +32,16 @@ FROM base AS runner
 
 ENV NODE_ENV=production
 
-# Install ONLY production dependencies to optimize image size
+
+# Copy package.json, lockfile, and prisma schema
 COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
+
+# Install ONLY production dependencies to optimize image size (triggers Prisma postinstall hook)
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+
+# Generate Prisma Client for production runtime
+RUN npx prisma generate
 
 # Copy the pre-built JavaScript bundle from the build stage
 COPY --from=build /app/dist ./dist
@@ -42,4 +50,4 @@ COPY --from=build /app/dist ./dist
 EXPOSE 3000
 
 # Start the application in production mode
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
