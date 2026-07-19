@@ -33,7 +33,7 @@ FROM base AS runner
 ENV NODE_ENV=production
 
 # Install GDAL (ogr2ogr) for GIS data synchronization
-RUN apk add --no-cache gdal
+RUN apk add --no-cache gdal gdal-tools gdal-driver-pg
 
 
 # Copy package.json, lockfile, and prisma schema
