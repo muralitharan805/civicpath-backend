@@ -3,6 +3,14 @@ import { ParliamentConstituencyController } from './parliament-constituency.cont
 import { ParliamentConstituencyService } from './parliament-constituency.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
+import { RedisService } from '../providers/redis/redis.service';
+
+const mockRedisService = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue('OK'),
+  del: jest.fn().mockResolvedValue(1),
+};
+
 describe('ParliamentConstituencyController', () => {
   let controller: ParliamentConstituencyController;
   let service: ParliamentConstituencyService;
@@ -32,6 +40,10 @@ describe('ParliamentConstituencyController', () => {
         {
           provide: ParliamentConstituencyService,
           useValue: mockParliamentConstituencyService,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
         },
       ],
     }).compile();
