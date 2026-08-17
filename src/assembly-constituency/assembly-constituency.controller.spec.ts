@@ -3,6 +3,14 @@ import { AssemblyConstituencyController } from './assembly-constituency.controll
 import { AssemblyConstituencyService } from './assembly-constituency.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
+import { RedisService } from '../providers/redis/redis.service';
+
+const mockRedisService = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue('OK'),
+  del: jest.fn().mockResolvedValue(1),
+};
+
 describe('AssemblyConstituencyController', () => {
   let controller: AssemblyConstituencyController;
   let service: AssemblyConstituencyService;
@@ -32,6 +40,10 @@ describe('AssemblyConstituencyController', () => {
         {
           provide: AssemblyConstituencyService,
           useValue: mockAssemblyConstituencyService,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
         },
       ],
     }).compile();
