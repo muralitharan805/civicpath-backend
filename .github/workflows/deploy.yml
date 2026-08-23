@@ -34,7 +34,7 @@ jobs:
             git pull origin main || git pull origin master
 
             echo "🐳 Starting containerized application suite..."
-            docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml up -d --build
+            docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml -f docker-compose.repo.yml up -d --pull always
 
             echo "🧹 Cleaning up dangling image layers to save disk space..."
             docker image prune -f
