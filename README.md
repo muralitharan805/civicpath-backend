@@ -180,6 +180,74 @@ pnpm run test:cov
 
 ---
 
+## 🐳 Docker Containerization & Execution Guide
+
+CivicPath Backend is fully containerized using an enterprise-grade **Mandatory 6-File Docker Compose Topology** and a multi-stage **Dockerfile** with non-root security (`USER node`), GDAL support, and automated Prisma migrations.
+
+### 📦 Build & Push Image to Registry
+
+To compile the multi-stage production runner image and push it to Docker Hub:
+
+```bash
+# Build the production runner stage locally
+docker build -t seyalicraft/civicpath-backend:latest .
+
+# Push image to registry
+docker push seyalicraft/civicpath-backend:latest
+```
+
+---
+
+### 🚀 Execution Modes
+
+#### Mode A: Standalone Development Environment (Local Code + Local Infra)
+Spins up NestJS in watch mode (`pnpm run start:dev`) alongside dedicated PostgreSQL (pgvector + PostGIS), Redis, and RedisInsight containers.
+
+```bash
+docker compose -f docker-compose.shared.yml -f docker-compose.yml -f docker-compose.override.yml up -d
+```
+
+#### Mode B: Shared Infrastructure (Cost-Saver Development)
+Runs the NestJS application container and connects it to existing running infrastructure containers via external Docker networks (`pgvector_network`, `redis_default`).
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml up -d
+```
+
+#### Mode C: Pre-Built Registry Deployment (VPS Deployment without Compilation)
+Pulls pre-built image from Docker Hub and executes without running local builds on resource-constrained servers.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.existing-infra.yml -f docker-compose.repo.yml up -d --pull always
+```
+
+#### Mode D: Production Standalone Environment
+Builds and deploys the production container (`target: runner`) with resource limits, auto-restart policies, and json-file logging.
+
+```bash
+docker compose -f docker-compose.shared.yml -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+---
+
+## 🚀 Automated CI/CD GitHub Actions SSH Deployment
+
+CivicPath Backend includes an automated GitHub Actions pipeline ([.github/workflows/deploy.yml](file://./.github/workflows/deploy.yml)) that triggers zero-downtime deployment to your remote VPS server on push to `main` or `master` branches.
+
+### 🔑 Required GitHub Repository Secrets
+
+Configure the following secrets in your GitHub Repository under **Settings > Secrets and variables > Actions > New repository secret**:
+
+| Secret Name | Description | Example Value |
+| :--- | :--- | :--- |
+| `SERVER_HOST` | VPS Server Public IP or Domain Name | `192.0.2.1` or `vps.seyalicraft.com` |
+| `SERVER_USERNAME` | SSH User Account Name | `ubuntu` or `root` |
+| `SERVER_PORT` | Remote SSH Service Port | `22` or `2222` |
+| `SERVER_SSH_KEY` | Raw Private SSH Key string (`id_ed25519` / `id_rsa`) | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `PROJECT_PATH` | Absolute path on VPS where repo is cloned | `/home/ubuntu/civicpath-backend` |
+
+---
+
 ## License
 
 This project is [MIT licensed](LICENSE).

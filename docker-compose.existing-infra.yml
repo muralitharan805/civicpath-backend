@@ -3,22 +3,37 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "${HOST_PORT:-${PORT:-3000}}:${PORT:-3000}"
+      target: runner
+    image: ${DOCKER_REGISTRY_IMAGE:-seyalicraft/civicpath-backend:latest}
+    env_file:
+      - .env
     environment:
+      - NODE_ENV=production
       - PORT=${PORT:-3000}
-      - NODE_ENV=${NODE_ENV:-development}
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-pgvector-db}
       - DB_PORT=${DB_PORT:-5432}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DATABASE=${DB_DATABASE}
       - DATABASE_URL=${DATABASE_URL}
-      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_HOST=${REDIS_HOST:-redis-dev}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_DB=${REDIS_DB:-0}
       - REDIS_KEY_PREFIX=${REDIS_KEY_PREFIX:-civicpath:}
       - JWT_SECRET=${JWT_SECRET:-civicpath_dev_jwt_secret}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
+    ports:
+      - "${HOST_PORT:-${PORT:-3000}}:${PORT:-3000}"
     restart: always
+    networks:
+      - db_network
+      - redis_network
+
+networks:
+  db_network:
+    name: ${DB_NETWORK_NAME:-pgvector_network}
+    external: true
+  redis_network:
+    name: ${REDIS_NETWORK_NAME:-redis_default}
+    external: true
