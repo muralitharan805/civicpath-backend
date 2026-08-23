@@ -1,0 +1,4 @@
+services:
+  app:
+    image: ${DOCKER_REGISTRY_IMAGE:-seyalicraft/civicpath-backend:latest}
+    build: !reset null

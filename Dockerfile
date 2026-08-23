@@ -1,25 +1,28 @@
 # ==============================================================================
-# Multi-Stage Dockerfile for NestJS Application
-# Enforces strict reliance on pnpm for dependency management
+# Multi-Stage Dockerfile for CivicPath Backend (NestJS + Prisma + GIS)
+# Enforces strict reliance on pnpm, non-root execution (USER node), and healthchecks
 # ==============================================================================
 
 # --- Stage 1: Base Image ---
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Allow native build scripts for pnpm 11 non-interactive container builds
+ENV PNPM_ALLOW_BUILDS=all
+
+# Install pnpm globally via corepack / npm
+RUN npm install -g pnpm@11.1.3
 
 WORKDIR /app
 
 # --- Stage 2: Dependencies ---
-# Installs all dependencies (including devDependencies) for development & building
+# Installs all dependencies (including devDependencies) for compilation & dev runtime
 FROM base AS dependencies
 
-COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* .npmrc* ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
 
 # --- Stage 3: Build ---
-# Compiles the TypeScript NestJS codebase to a production-ready JS bundle
+# Generates Prisma Client and compiles TypeScript codebase to JS bundle
 FROM dependencies AS build
 
 COPY . .
@@ -35,22 +38,40 @@ ENV NODE_ENV=production
 # Install GDAL (ogr2ogr) for GIS data synchronization
 RUN apk add --no-cache gdal gdal-tools gdal-driver-pg
 
+WORKDIR /app
 
-# Copy package.json, lockfile, and prisma schema
-COPY package.json pnpm-lock.yaml ./
+# Copy package manifest, pnpm config & Prisma schema
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* .npmrc* ./
 COPY prisma ./prisma
+COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
-# Install ONLY production dependencies to optimize image size (triggers Prisma postinstall hook)
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+# Install ONLY production dependencies
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # Generate Prisma Client for production runtime
 RUN npx prisma generate
 
-# Copy the pre-built JavaScript bundle from the build stage
+# Copy compiled JS bundle from build stage
 COPY --from=build /app/dist ./dist
 
-# Expose NestJS default application port
-EXPOSE 3000
+# Set ownership to unprivileged node user
+RUN chmod +x ./scripts/docker-entrypoint.sh && chown -R node:node /app
 
-# Start the application in production mode
+# Switch to low-privilege user
+USER node
+
+# Default runtime port fallback
+ENV PORT=3000
+
+# Expose NestJS application port
+EXPOSE ${PORT}
+
+# Native healthcheck directive
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:${PORT}/api/v1 || exit 1
+
+# Configure automated migration entrypoint wrapper
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
+
+# Default execution command
 CMD ["node", "dist/src/main"]
