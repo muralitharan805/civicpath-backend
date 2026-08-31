@@ -9,6 +9,8 @@ import { ConstituencyModule } from './constituency/constituency.module';
 import { redisConfig } from './config/redis.config';
 import { RedisModule } from './providers/redis/redis.module';
 
+import { SpatialModule } from './spatial/spatial.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +22,7 @@ import { RedisModule } from './providers/redis/redis.module';
     ParliamentConstituencyModule,
     ConstituencyModule,
     RedisModule,
+    SpatialModule,
   ],
   controllers: [AppController],
   providers: [AppService],
